@@ -1,3 +1,4 @@
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export interface BudgetState {
@@ -11,8 +12,8 @@ export interface AuditEvent {
   model: string;
   cost_total: number;
   latency_used_ms: number;
-  action: "allow" | "stop";
-  budget_state: BudgetState;
+  action: "allow" | "stop" | "policy_change";
+  budget_state?: BudgetState;
   [key: string]: any;
 }
 
@@ -45,6 +46,12 @@ export async function getInsights(): Promise<Insights> {
   return res.json();
 }
 
+export async function getRoutingPolicy(): Promise<{ policy: Record<string, string> }> {
+  const res = await fetch(`${API_URL}/routing-policy`, { cache: "no-store" });
+  if (!res.ok) throw new Error("Failed to fetch routing policy");
+  return res.json();
+}
+
 export async function postQuery(query: string): Promise<any> {
   const res = await fetch(`${API_URL}/query`, {
     method: "POST",
@@ -60,12 +67,12 @@ export async function deleteSession(): Promise<void> {
   if (!res.ok) throw new Error("Failed to reset session");
 }
 
-export async function postAsk(question: string): Promise<{ answer: string }> {
-  const res = await fetch(`${API_URL}/ask`, {
+// Updated: only applySuggestion remains (uses /apply-suggestion endpoint)
+export async function applySuggestion(): Promise<any> {
+  const res = await fetch(`${API_URL}/apply-suggestion`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ question }),
   });
-  if (!res.ok) throw new Error("Failed to ask Obsidian");
+  if (!res.ok) throw new Error("Failed to apply latest suggestion");
   return res.json();
 }
